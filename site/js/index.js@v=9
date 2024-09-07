@@ -1,0 +1,1345 @@
+function loadScript(url, callback){
+  var script = document.createElement("script");
+ 
+  if (script.readyState){  // IE
+    script.onreadystatechange = function(){
+      if (script.readyState == "loaded" ||
+              script.readyState == "complete"){
+        script.onreadystatechange = null;
+        callback();
+      }
+    };
+  } else {  // Р”СЂСѓРіРёРµ Р±СЂР°СѓР·РµСЂС‹
+    script.onload = function(){
+      callback();
+    };
+  }
+ 
+  script.src = url;
+  document.getElementsByTagName("head")[0].appendChild(script);
+}
+
+//Транслитерация кириллицы в URL
+function urlRusLat(str) {
+	str = str.toLowerCase(); // все в нижний регистр
+		var cyr2latChars = new Array(
+				['а', 'a'], ['б', 'b'], ['в', 'v'], ['г', 'g'],
+				['д', 'd'],  ['е', 'e'], ['ё', 'yo'], ['ж', 'zh'], ['з', 'z'],
+				['и', 'i'], ['й', 'y'], ['к', 'k'], ['л', 'l'],
+				['м', 'm'],  ['н', 'n'], ['о', 'o'], ['п', 'p'],  ['р', 'r'],
+				['с', 's'], ['т', 't'], ['у', 'u'], ['ф', 'f'],
+				['х', 'h'],  ['ц', 'c'], ['ч', 'ch'],['ш', 'sh'], ['щ', 'shch'],
+				['ъ', ''],  ['ы', 'y'], ['ь', ''],  ['э', 'e'], ['ю', 'yu'], ['я', 'ya'],
+				
+				['А', 'A'], ['Б', 'B'],  ['В', 'V'], ['Г', 'G'],
+				['Д', 'D'], ['Е', 'E'], ['Ё', 'YO'],  ['Ж', 'ZH'], ['З', 'Z'],
+				['И', 'I'], ['Й', 'Y'],  ['К', 'K'], ['Л', 'L'],
+				['М', 'M'], ['Н', 'N'], ['О', 'O'],  ['П', 'P'],  ['Р', 'R'],
+				['С', 'S'], ['Т', 'T'],  ['У', 'U'], ['Ф', 'F'],
+				['Х', 'H'], ['Ц', 'C'], ['Ч', 'CH'], ['Ш', 'SH'], ['Щ', 'SHCH'],
+				['Ъ', ''],  ['Ы', 'Y'],
+				['Ь', ''],
+				['Э', 'E'],
+				['Ю', 'YU'],
+				['Я', 'YA'],
+				
+				['a', 'a'], ['b', 'b'], ['c', 'c'], ['d', 'd'], ['e', 'e'],
+				['f', 'f'], ['g', 'g'], ['h', 'h'], ['i', 'i'], ['j', 'j'],
+				['k', 'k'], ['l', 'l'], ['m', 'm'], ['n', 'n'], ['o', 'o'],
+				['p', 'p'], ['q', 'q'], ['r', 'r'], ['s', 's'], ['t', 't'],
+				['u', 'u'], ['v', 'v'], ['w', 'w'], ['x', 'x'], ['y', 'y'],
+				['z', 'z'],
+				
+				['A', 'A'], ['B', 'B'], ['C', 'C'], ['D', 'D'],['E', 'E'],
+				['F', 'F'],['G', 'G'],['H', 'H'],['I', 'I'],['J', 'J'],['K', 'K'],
+				['L', 'L'], ['M', 'M'], ['N', 'N'], ['O', 'O'],['P', 'P'],
+				['Q', 'Q'],['R', 'R'],['S', 'S'],['T', 'T'],['U', 'U'],['V', 'V'],
+				['W', 'W'], ['X', 'X'], ['Y', 'Y'], ['Z', 'Z'],
+				
+				[' ', '_'],['0', '0'],['1', '1'],['2', '2'],['3', '3'],
+				['4', '4'],['5', '5'],['6', '6'],['7', '7'],['8', '8'],['9', '9'],
+				['-', '-']
+
+    );
+
+    var newStr = new String();
+
+    for (var i = 0; i < str.length; i++) {
+
+        ch = str.charAt(i);
+        var newCh = '';
+
+        for (var j = 0; j < cyr2latChars.length; j++) {
+            if (ch == cyr2latChars[j][0]) {
+                newCh = cyr2latChars[j][1];
+
+            }
+        }
+        // Если найдено совпадение, то добавляется соответствие, если нет - пустая строка
+        newStr += newCh;
+
+    }
+    // Удаляем повторяющие знаки - Именно на них заменяются пробелы.
+    // Так же удаляем символы перевода строки, но это наверное уже лишнее
+    return newStr.replace(/[_]{2,}/gim, '_').replace(/\n/gim, '');
+}
+
+function m_ajaxItems(e_url,e_action,e_target,e_check,_function)
+{
+//console.log(e_url);
+
+//$('body').prepend(e_url);
+	$('#waiting').show();
+	$.get(e_url,function( data ){
+	
+//console.log(e_url);
+		$('#waiting').hide();
+		eval("var l_temp = "+data);
+	//	if ( l_temp["btn_hide"]== 1) {$(e_check).hide();$(e_check).parent().children("#pagenavigator").hide();} else {$(e_check).show();$(e_check).parent().children("#pagenavigator").show();}
+		if ( l_temp["btn_hide"]== 1) {$(e_check).hide();} else {$(e_check).show();}
+		if (e_target == "return")
+		{
+		}
+		else if (l_temp["items"] != undefined)
+		{
+			switch (e_action)
+			{
+				case "more":
+					$(e_target).append(l_temp["items"]);
+				break;
+				case "refresh":
+					$(e_target).html(l_temp["items"]);
+				break;
+			}
+		}
+		if (_function != undefined) _function(l_temp);
+		
+	//	alert(l_temp["message"]);
+
+	});//end_ func_ get
+}//end_ func
+
+(function($)
+{
+
+	$.fn.m_multi_combo = function(options){
+		var settings = {
+			change_item : function(){}
+		};
+		if (options) settings = $.extend( settings, options );
+		return this.each(function(){
+				
+			var _options = "";
+		//	var _val = $(this).attr("value");
+			var _val = "";
+			var _text = $('option:selected',this).text();
+			var _placeholder = $(this).attr("placeholder");
+			if (_placeholder == undefined) _placeholder = "";
+			var _name = $(this).attr('name');
+			$('option:first',this).remove();
+			$('option',this).each(function(){
+				var _class = $(this).attr('class');
+				if (_class == undefined) _class = "";
+				
+				if ($(this).attr("selected"))
+				{
+					_selected = 'checked="checked"';
+					if (_val != "") _val += "|";
+					_val += $(this).val();
+				}
+				else _selected = "";
+				
+				
+				if (settings.single == true)
+					_options += '<div class="m_combo_option '+_class+'" data-value="'+$(this).val()+'">'+$(this).text()+'</div>';
+				else
+					_options += '<div class="m_combo_option '+_class+'" data-value="'+$(this).val()+'"><label><input '+_selected+' type="checkbox" value="'+$(this).val()+'">'+$(this).text()+'</label></div>';
+				
+
+				
+			});
+			$(this).after("<div class='m_combo_container ' id='combo_"+_name+"'></div>");
+			var _control = $(this).next('.m_combo_container');
+			
+			if (settings.single == true)
+				$(_control).html("<div class='m_combo_text' data-value='"+_val+"'><input class='find' type='text' placeholder='"+_text+"' value=''/></div><div class='m_combo_list'>"+_options+"</div><input name='"+_name+"' type='hidden' value='"+_val+"'/>");
+			else
+				$(_control).html("<div class='m_combo_text' data-value='"+_val+"'><input class='find' type='text' placeholder='"+_placeholder+"' value=''/></div><div class='m_combo_list'>"+_options+"</div><input name='"+_name+"' type='hidden' value='"+_val+"'/>");
+			
+			$(this).remove();
+			
+			
+			$('.m_combo_text .find',_control).keyup(function(){
+				var _val = $(this).val();
+				_val = _val.toLowerCase();
+				var _control = $(this).closest('.m_combo_container');
+				$('.m_combo_option',_control).show();
+				$('.m_combo_option',_control).each(function(){
+					var _text = $(this).text();
+					_text = _text.toLowerCase();
+			
+					if (_text.indexOf(_val) < 0) $(this).hide(); else $(this).show();
+				});
+				
+			});
+			$('.m_combo_text',_control).click(function(){
+				var _parent = $(this).closest('.m_combo_container');
+				if ($(_parent).hasClass('open'))
+				{
+					$(_parent).removeClass('open');
+				}
+				else
+				{
+					$('.m_combo_container').removeClass('open');
+					$(_parent).addClass('open');
+				}
+			});
+			
+			if (settings.single == true)
+			{
+				$('.m_combo_option',_control).click(function(){
+					var _parent = $(this).closest('.m_combo_container');
+					$("option[value=\""+$(this).data('value')+"\"]",_parent).prop('selected',true);
+					$('input[type=hidden]',_parent).val($(this).data('value'));
+					$('.m_combo_text .find',_parent).val($(this).text());
+					$('.m_combo_text',_parent).attr('data-value',$(this).data('value'));
+					$(_parent).removeClass('open');
+				});
+			}
+			else
+			{
+				$('input',_control).change(function(){
+					var _parent = $(this).closest('.m_combo_container');
+					var _val = "";
+					var _title = "";
+					$("input[type=checkbox]:checked",_parent).each(function(){
+						_label = $(this).closest('label');
+						if (_val == "")
+						{
+							_val = $(this).val();
+							_title = $(_label).text();
+						}
+						else
+						{
+							_val += "|"+$(this).val();
+							_title += "|"+$(_label).text();
+						}
+					});
+					$('input[type=hidden]',_parent).val(_val);
+					$('.m_combo_text',_parent).attr('data-value',_val);
+					
+					settings.change_item(_val,_title);
+				//	$(_parent).removeClass('open');
+				});
+			}
+		
+		});
+	}
+
+
+	$.fn.m_combo = function(options){
+		var settings = {func : function(){}};
+		if (options) $.extend( settings, options );
+
+		return this.each(function(){
+			var _options = "";
+			var _val = $(this).val();
+			$('option',this).each(function(){
+				_options += '<div class="m_combo_option" data-value="'+$(this).val()+'">'+$(this).text()+'</div>';
+			});
+			$(this).after("<div class='m_combo_container "+this.id+"' id='"+this.id+"'></div>");
+			var _control = $(this).next('.m_combo_container');
+			
+			$(_control).html("<div class='m_combo_text' data-value='"+$('option:selected',this).val()+"'>"+$('option:selected',this).text()+"</div><div class='m_combo_list'>"+_options+"</div>"+$("<div>").append($(this).clone()).html());
+			
+			$(this).remove();
+			
+			$('.m_combo_text',_control).click(function(){
+				var _parent = $(this).closest('.m_combo_container');
+				if ($(_parent).hasClass('open'))
+				{
+					$(_parent).removeClass('open');
+				}
+				else
+				{
+					$(_parent).addClass('open');
+				}
+			});
+			$('.m_combo_option',_control).click(function(){
+				var _parent = $(this).closest('.m_combo_container');
+				$("option[value=\""+$(this).data('value')+"\"]",_parent).prop('selected',true);
+				$('.m_combo_text',_parent).text($(this).text());
+				$('.m_combo_text',_parent).attr('data-value',$(this).data('value'));
+				$(_parent).removeClass('open');
+			});
+		
+		});
+	}
+})( jQuery )
+
+
+var myMap1;
+if (typeof(ymaps) != "undefined") ymaps.ready(initYandexMap);
+function initYandexMap()
+{
+	if ($('#map1').length == 0) return;
+
+	
+	myMap1 = new ymaps.Map('map1',
+	{
+		center: [55.735344, 37.627463],
+		zoom: 10,
+		controls: ['zoomControl']
+	},
+	{
+		searchControlProvider: 'yandex#search'
+	});
+
+}
+function _refresh_YandexMap_(){
+		if ( typeof(ymaps) == "undefined" ) return;
+
+}
+
+function _refresh_YandexMap()
+{
+	if ( typeof(ymaps) == "undefined" ) return;
+
+	$('.map_container .waiting').show();
+	myMap1.geoObjects.removeAll();
+	//console.log(_base_list_salons_url+_add+"&map=1");
+	console.log("map: "+_base_list_salons_url+"&ajax=1&map=1"+_add);
+	$.get(_base_list_salons_url+"&ajax=1&map=1"+_add,function( data ){
+		$('.map_container .waiting').hide();
+		eval("var temp = "+data);
+		if (temp["items"] != undefined) _add_objects_YandexMap(temp["items"]);
+		console.log(temp["message"]);
+	});//end_ func_ get
+
+	return;
+}
+function _add_objects_YandexMap(_addresses)
+{
+	var _ball_bg = '/project/templates/site/img/marker.one.png';
+	var _ball_Offset = [-7, -7];
+	var _ball_Size = [15, 14];
+
+	// Создаем собственный макет с информацией о выбранном геообъекте.
+	var customBalloonContentLayout = ymaps.templateLayoutFactory.createClass([
+			'<ul class=list>',
+			// Выводим в цикле список всех геообъектов.
+			'{% for geoObject in properties.geoObjects %}',
+				'<li>{{ geoObject.properties.balloonContent|raw }}</li>',
+			'{% endfor %}',
+			'</ul>'
+		].join(''));
+	
+	var clusterer = new ymaps.Clusterer(
+	{
+		clusterIcons: [
+		{
+			href: '/project/templates/site/img/marker.several.png',
+			size: [30, 42],
+			offset: [-3, -42]
+		}],
+		gridSize: 50,
+		clusterDisableClickZoom: true,
+		groupByCoordinates: false,
+		clusterHideIconOnBalloonOpen: false,
+		geoObjectHideIconOnBalloonOpen: false,
+
+		
+		clusterBalloonPanelMaxMapArea: 0,
+		clusterBalloonMaxHeight: 200,
+		clusterBalloonContentLayout: customBalloonContentLayout
+	});
+
+	
+	/*
+	var _addresses = [
+		["Люберцы, Рязанское шоссе д. 46, (п.Томилино, Лит 2С)",[55.649368, 37.929953]],
+		["Люберцы, Рязанское шоссе д. 46, (п.Томилино, Лит 2С)",[55.614048, 37.616970]],
+		["Реутов, 2-3-ий км МКАД, д. 7",[55.756579, 37.843207]],
+		["ул. Коптевская, д. 69А стр.2",[55.830599, 37.516027]],
+		["Ленинский пр-кт, д. 146",[55.656849, 37.496291]],
+		["ул. Большая Семеновская, д. 42, стр. 4",[55.779292, 37.715354]],
+	];
+	*/
+	
+//	console.log(_addresses);
+	var placemarks = [];
+	for (i in _addresses)
+	{
+		eval("_coord = "+_addresses[i]["addr_geo"]);
+		//baloon 1
+		placemarks[placemarks.length] = new ymaps.Placemark(_coord,
+		{
+			balloonContent: "<div class='baloon-content'><div class='title'>"+_addresses[i]["company_name"]+"</div>"+_addresses[i]["company_address"]+"<div class='phone'>"+_addresses[i]["company_phone"]+"</div></div>",
+			hintContent: _addresses[i]["company_address"]
+			}, {
+		//	balloonLayout: "default#imageWithContent",
+		//	balloonImageHref: _ball_bg,
+		//	balloonImageOffset: _ball_Offset,
+		//	balloonImageSize: _ball_Size,
+			iconLayout: 'default#image',
+			// Своё изображение иконки метки.
+			iconImageHref: _ball_bg,
+			// Размеры метки.
+			iconImageSize: _ball_Size,
+			// Смещение левого верхнего угла иконки относительно
+			// её "ножки" (точки привязки).
+			iconImageOffset: _ball_Offset
+		});
+		clusterer.add(placemarks);
+		//myPlacemark1.balloon.open();
+	}
+
+	myMap1.geoObjects.add(clusterer);
+//	myMap1.setBounds(clusterer.getBounds());
+
+
+}//end_ func
+
+$(window).bind('resize', function() {
+//	$('.topmenu_container *').off();
+//	init_topmenu();
+});
+
+
+function initFancybox()
+{
+	$('.gallery[data-fancybox]').fancybox({
+			thumbs : {
+			autoStart : true
+		  }
+	});
+	$('.gallery2[data-fancybox]').fancybox({});
+
+	$(document).on( "click",".popup",function(){
+		var _href = $(this).attr("href");
+		if (_href[0] == "#") _href = "/site.php?module="+encodeURI(_href.substring(1));
+		$.get(_href+"&ajax=1",function(data){
+
+	//	console.log(data);
+			$.fancybox.open(data,{
+			'padding' : 20,
+			touch: false,
+			afterShow: function()
+			{
+				$('.popup_on .m_combo').m_combo();
+			}
+
+			});
+		});
+		return false;
+	});
+	
+	$(".slick-slider-gallery").click(function(){
+		var _rel = $(this).attr("rel");
+		
+		var _parent = $(this).closest(".slick-slide");
+		var _index = parseInt($(_parent).attr("data-slick-index"));
+	//	alert(_index);
+		if (typeof(_rel) != "undefined")
+		{
+			var _temp = {};
+			var _gallery = [];
+			$(".slick-slider-gallery[rel='"+_rel+"']").each(function(){
+				if ($(this).closest(".slick-cloned").length > 0) return;
+				_url = $(this).attr("href");
+				if (typeof(_temp[_url]) == "undefined")	_gallery[_gallery.length] = {src :_url};
+				_temp[_url] = "";
+			});
+			
+		//	console.log(_gallery);
+			$.fancybox.open(
+				_gallery,
+				{
+					index: (_index),
+				}
+			);
+			
+		}
+		return false;
+	});
+
+
+}//end_ func
+
+
+
+function init_forms()
+{
+	$("input[name=comm_phone]").mask("+7(999) 999-99-99");
+}
+function cost3( e_value )
+{
+	e_value += "";
+	var l_result = "";
+
+	for( i=0; i<e_value.length; i++ )
+	{
+		var l_position = (e_value.length)-i-1;
+		/*l_result = e_value[l_position] + l_result;*/
+		l_result = e_value.substr(l_position,1) + l_result;
+		if ( parseInt((i+1)/3)==((i+1)/3) ) { l_result = " "+l_result; }
+	}//end_ for_ i
+
+	return l_result;
+}//end_ func_ cost3
+
+
+function init_back()
+{
+	$(window).scroll(function () {
+		var _html_height = $('.html').height();
+		scroll_top = $(document).scrollTop();
+	//	console.log(_html_height+ " " + (scroll_top + $(window).height()));
+		if ((scroll_top + $(window).height() + $('footer').height()) >= _html_height) {$('.back').addClass("bottom");$('.back').css("top",_html_height - $('footer').height() - 103 );} else {$('.back').removeClass("bottom");$('.back').css("top","auto");}
+	//	if (scroll_top > 20) {$('.back').stop();$('.back').fadeIn();}
+	//	else {$('.back').stop();$('.back').fadeOut();}
+	});
+}
+
+function _scroll(_this)
+{
+	var _shift = 0;
+	if ($(_this).attr('_shift') != undefined) _shift = $(_this).attr('_shift');
+	
+	var _m_shift = 0;
+	if ($(_this).attr('_m_shift') != undefined) _m_shift = $(_this).attr('_m_shift');
+
+	
+	var curWidth = $(window).width();
+	if (curWidth <= 991) _shift = _m_shift;
+
+	
+	
+	var el = $(_this).attr('href');
+//	var _pos = $(el).offset().top - $("body").offset().top - _shift - parseInt($(el).css("top"));
+	var _pos = $(el).offset().top - $("body").offset().top - _shift;
+
+
+	
+	$("html,body").animate({ scrollTop: _pos }, 500);	
+}
+function anchor_click()
+{
+	$('.anchor[href^="#"]').click(function(){
+		_scroll(this);
+		return false; 
+	});
+	
+	$('.anchor2[href^="#"]').click(function(){
+	
+		var _model = $(this).attr("_model");
+		if ($('#filter_table select[name=models]').length > 0)
+			$("#filter_table select[name=models] option[value='"+_model+"']").prop("selected",true).change();
+	
+		var _shift = 0;
+		if ($(this).attr('_shift') != undefined) _shift = $(this).attr('_shift');
+		
+		var el = $(this).attr('href');
+		var _pos = $(el).offset().top - $("body").offset().top;
+		$("html,body").animate({ scrollTop: _pos }, 500);
+		return false; 
+	});
+}
+
+
+
+
+function init_topmenu()
+{
+	
+	var _width = $(window).width();
+	var br = navigator.userAgent;
+	if (/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) 
+	{
+		if ($(".menu .current > a:first").text() != "") _current_text = $(".menu .current > a:first").text();
+		else _current_text = $(".menu > li:first > a:first").text();
+	//	$('.btn_menu span').text(_current_text);
+	
+		$('.btn_menu').click(function(){
+			var _menu = $(this).closest(".menu_container");
+			if ($("html").hasClass('openmenu'))
+			{
+				$("html").removeClass('openmenu');
+			}
+			else
+			{
+				$("html").addClass('openmenu');
+			}
+			$('.submenu',"html").removeClass("show");
+		});
+		
+		$('.menu > li > .sub').click(function(){
+			var _parent = $(this).closest("li");
+			
+			if ($(_parent).hasClass("open"))
+			{
+				$(_parent).removeClass("open");
+			}
+			else
+			{
+				$(_parent).addClass("open");
+			}
+			return false;
+		});
+		$('.btn_menu a').click(function(){
+			$('html').removeClass('openmenu');
+		});
+		
+		$(document).mousedown(function(event){if (($(event.target).closest('.menu_container').length == 0 && !$(event.target).hasClass('btn_menu'))) {$("html").removeClass('openmenu');}});
+
+	}
+	else
+	{
+		$(".menu > li > a.sub").click(function(){
+			var _parent = $(this).closest("li");
+			var _submenu = $(this).next(".submenu");
+			if ($(_parent).hasClass("open"))
+			{
+				$(".menu *").removeClass("open");
+			}
+			else
+			{
+				$(".menu *").removeClass("open");
+				$(_parent).addClass("open");
+			}
+			return false;
+		});
+		
+		$(document).mousedown(function(event){if ($(event.target).closest('.menu_container').length == 0) {$(".menu *").removeClass("open");$("html").removeClass("no_scroll");}});
+
+	}
+	
+
+}
+
+
+
+function init_resp_table()
+{
+	var i = 1;
+	$('.resp_table').each(function(){
+		$(this).addClass('resp_table'+i);
+		var _add_style = "";
+		var j = 1;
+		$('th',this).each(function(){
+			var _text = $(this).html();
+			_text = _text.replace("<br>"," ");
+			_text = _text.replace("<br/>"," ");
+			_text = _text.replace("</br>"," ");
+			_text = _text.replace("/r","");
+			_text = _text.replace(/\r|\n/g, '')
+			_text = _text.replace(/<\/?[^>]+>/g,'');
+			_text = _text.replace(/\s{2,}/g, ' ');
+			if (_text != "") _add_style += ".resp_table"+i+ " tr td:nth-child("+j+"):before {content:'"+_text+"'}";
+			j++;
+		});
+		$(this).after("<style>"+_add_style+"</style>");
+		
+		i++;
+	});
+}
+
+function youtume_video_container()
+{
+	$('.youtume_video_container').each(function(){
+		var _base_width = $(this).width();
+		var _base_height = $(this).height();
+		var _ratio = _base_width/_base_height;
+		
+	//	$(this).width('100%');
+		var _new_width = $(this).width();
+		var _new_height = _base_height*_ratio;
+	//	$(this).height(_new_height+'px');
+		
+	//	console.log(_base_width);
+	//	console.log(_base_height);
+	//	console.log(_ratio);
+	//	console.log(_new_width);
+	//	console.log(_new_height);
+		
+		
+		
+	});
+}
+
+
+function _show_FontAwesome()
+{
+	_html = "<div class='awesome_container'>";
+	_style = "";
+	
+	//61440 - \f000;
+	//62208 - \f300;
+	for (var i=61440;i<=62208;i++)
+		_html += "<div class='awesome' data-code='\\"+i.toString(16)+"' style=\"quotes: '\\"+i.toString(16)+"' '\\203A';\"></div>";
+	_html += "</div>";
+	
+	$("body").append(_html);
+	
+}
+function init_top_menu()
+{
+	$(".menu_container").attr("data-top",$(".menu_container").offset().top);
+	
+	$(window).scroll(function () {
+		scroll_top = $(document).scrollTop();
+		var _menu_top = $(".menu_container").attr("data-top");
+		
+		if (!/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent))
+		{
+			if (scroll_top >= _menu_top) $("html").addClass("fixmenu"); else $(".html").removeClass("fixmenu");
+		}
+	});
+	
+	$(window).trigger("scroll");
+}
+
+function _init_m_short()
+{
+
+
+	var _count = 0;
+	$(".m_short").each(function(){
+		
+		var _text  = $(this).html();
+		_text = _text.replace("<p>","<div>");
+		_text = _text.replace("</p>","</div>");
+		$(this).html(_text);
+		
+		var _row = $(this).attr("data-rows");
+		var _height = $(this).attr("data-height");
+		if (_row == undefined) _row = 3;
+		
+		$(this).attr("data-m_short_id",_count);
+		
+		var _btn_text = $(this).attr("data-btn_text");
+		if (_btn_text == undefined) _btn_text = "Свернуть|Развернуть";
+		
+		_btn_text = _btn_text.split("|");
+		
+		
+		
+		var _height_open = $(this).height();
+		$(this).attr("data-m_short_height_open",_height_open);
+		
+		$(this).css("-webkit-line-clamp",_row);
+
+		
+		
+		var _text = "";
+		if (_row > 0) for (i=0;i<_row;i++) _text += "T<br/>";
+		
+		$(this).prepend("<test>"+_text+"</test>"); 
+		
+		if (_height == undefined) _height = $("test",this).height();
+		$(this).attr("data-m_short_height_close",_height);
+		$("test",this).remove();
+		
+		if (_height_open > _height) $(this).after("<a class='m_short_btn' href='#'><span>"+_btn_text[0]+"</span><span>"+_btn_text[1]+"</span></a>");
+
+		
+		var _status = $(this).attr("data-status");
+		if (_status == undefined) _status = "close";
+		
+		switch (_status)
+		{
+			case "close":
+				$(this).attr("data-status","close");
+				$(this).height(_height);
+			break;
+			case "open":
+				$(this).attr("data-status","open");
+				$(this).height(_height_open);
+			break;
+		}
+	
+		_count++;
+		
+	});
+
+
+	$(document).on("click",".m_short_btn",function(){
+		var _m_short = $(this).prev(".m_short");
+		var _status = $(_m_short).attr("data-status");
+		if (_status == undefined) _status = "close";
+		
+		if (!$(_m_short).is(':animated'))
+		{
+			switch (_status)
+			{
+				case "open":
+					$(_m_short).attr("data-status","close");
+					$(_m_short).animate({height:$(_m_short).attr("data-m_short_height_close")},300,function(){
+					});
+				break;
+				case "close":
+					$(_m_short).attr("data-status","open");
+					$(_m_short).animate({height:$(_m_short).attr("data-m_short_height_open")},300,function(){
+					});
+				break;
+			}
+		}
+		return false;
+		
+	});
+	
+}
+
+
+function init_blocks()
+{
+	/*Выпадающие списки list1*/
+	$(document).on( "click",".list1 > li:even",function(){
+		var _parent = $(this).closest(".list1");
+		if ($("li:animated",_parent).length == 0)
+		{
+			if ($(this).hasClass("open"))
+			{
+			//	$(this).removeClass("open");
+				$(this).next("li").slideUp(300,function(){$(this).prev("li").removeClass("open");});
+			}
+			else
+			{
+				$("> li:odd",_parent).slideUp(300,function(){$(this).prev("li").removeClass("open");});
+			//	$(this).addClass("open");
+				$(this).next("li").slideDown(300,function(){$(this).prev("li").addClass("open");});
+			}
+		}
+	});
+	/*Выпадающие списки list1*/
+
+
+	/*Выпадающие списки list2*/
+	$(document).on( "click",".list2 > li",function(){
+		var _parent = $(this).closest("ul");
+		if ($("li:animated",_parent).length == 0)
+		{
+			if ($(this).hasClass("open"))
+			{
+				$(this).removeClass("open");
+				$("._comment",this).slideUp(300,function(){});
+			}
+			else
+			{
+				$("> li.open ._comment",_parent).slideUp(300,function(){$(this).closest("li").removeClass("open");});
+				$(this).addClass("open");
+				$("._comment",this).slideDown(300,function(){});
+			}
+		}
+	});
+	/*Выпадающие списки list2*/
+
+
+
+	/*Таб списки*/
+	$(document).on( "click",".tabs1 > li:even",function(){
+		var _parent = $(this).closest(".tabs1");
+		$(" > li",_parent).removeClass("current");
+		$(this).addClass("current");
+	});
+	$(".tabs1").each(function(){
+		if ($(".current",this).length == 0) $(" > li:first",this).click();
+	});
+	/*Таб списки*/
+
+	/*Диаграмма*/
+	$(".diagram1").each(function(){
+		$.each($(" > li",this), function(idx, current){
+			if(idx % 2 == 1)
+			{
+				_val = $(this).text();
+				_val = _val.split(":");
+				console.log(_val.length);
+				if (_val.length > 1)
+					_val = 100/_val[1]*_val[0];
+				else
+					_val = _val[0];
+				$(this).html("<span style='width:"+_val+"%;'><i>"+_val+"%</i></span>");
+			}
+		});
+	});
+	/*Диаграмма*/
+	
+	
+}
+
+
+function _init_scroll(){
+	$(window).on( 'scroll', function(){
+	
+	
+		var curWidth = $(window).width();
+
+	
+		var scroll_top = $(document).scrollTop();
+		if (scroll_top > 0) $("html").addClass("_scroll"); else $("html").removeClass("_scroll");
+
+		if (curWidth < 768) return;
+
+		
+		$("[data-parallax]").each(function(){
+			var _type = $(this).attr("data-parallax");
+			var _friction = $(this).attr("data-friction");
+			if ($(this).hasAttr("data-delay")) _delay = $(this).attr("data-delay"); else _delay = 0;
+			if ($(this).hasAttr("data-speed")) _speed = $(this).attr("data-speed"); else _speed = 0;
+			
+	//		_pos_y = $(this).offset().top;
+			if ($(this).hasAttr("data-posY"))
+				_pos_y = $(this).attr("data-posY");
+			else
+			{
+				_pos_y = $(this).offset().top;
+				$(this).attr("data-posY",_pos_y);
+				$(this).addClass("animate_init");
+			}
+		//	console.log($(this).attr("data-posY"));
+			_window_height = $(window).height();
+			_elem_height = $(this).height();
+			//Проверяем попадает ли элемент в экран
+			if ((_pos_y - _window_height) < scroll_top && _pos_y > scroll_top)
+			{
+				switch (_type)
+				{
+					case "move_scroll":
+						x = (_pos_y-scroll_top)*_friction;
+						translate =  'translateY(' + x.toFixed(0) + 'px)';
+						$(this).css({
+						'-webit-transform': translate,
+						'-moz-transform': translate,
+						'transform': translate
+						});
+					break;
+				}
+			}
+			else
+			{
+			}
+	//					console.log((_pos_y - _window_height)+ " "+scroll_top);
+			//Проверяем дощел ли скролл до элемента
+			if ((_pos_y - _window_height) < scroll_top)
+			{
+				$(this).addClass("on_show");
+					$(this).css({
+						'transition-delay': _delay+"s",
+					});
+				switch (_type)
+				{
+					case "show_move_up":
+						$(this).addClass("animate");
+
+					break;
+					case "show_move_right":
+						$(this).addClass("animate");
+					break;
+					case "show_move_left":
+						$(this).addClass("animate");
+					break;
+					case "svg_line":
+						$(this).addClass("animate");
+						
+						_percent_clean = 100/_elem_height*(scroll_top - _pos_y + _window_height/2);
+
+						if (_percent_clean < 0) break;
+						
+				//		if (_koeff > _koeff_to) _koeff = _koeff - _check_koeff;
+				//		if (_koeff < _koeff_to) _koeff = _koeff + _check_koeff;
+						
+					//	_koeff = _koeff + _check_koeff;
+						
+				//		_elem_height = _elem_height*_koeff;
+						
+
+						
+				//		if (_percent > 20) _check_koeff = 0.05;
+					//	if (_percent > 40) _check_koeff = 1;
+					
+					
+				//		if (_percent_clean < 2) _koeff_to = 2;
+				//		if (Math.round(_percent_clean) == 12) _koeff_to = 1;
+				//		if (Math.round(_percent_clean) == 20) _koeff_to = 1;
+				//		if (Math.round(_percent_clean) > 30) _koeff_to = 1.5;
+				//		if (Math.round(_percent_clean) > 33) _koeff_to = 1;
+
+		//				if (Math.round(_percent_clean) < 35) _koeff = 1;
+		//				if (Math.round(_percent_clean) < 34) _koeff = 1.1;
+		//				if (Math.round(_percent_clean) < 33) _koeff = 1.2;
+					if (_percent_clean > 31) _koeff = 1.2;
+					if (_percent_clean > 40) _koeff = 1.1;
+					if (_percent_clean > 70) _koeff = 1;
+						if (Math.round(_percent_clean) < 31) _koeff = 1.4;
+						if (Math.round(_percent_clean) < 17) _koeff = 1.5;
+						if (Math.round(_percent_clean) < 16) _koeff = 1.6;
+						if (Math.round(_percent_clean) < 15) _koeff = 1.7;
+						if (Math.round(_percent_clean) < 14) _koeff = 1.8;
+						if (Math.round(_percent_clean) < 14) _koeff = 1.9;
+						if (Math.round(_percent_clean) < 12) _koeff = 2;
+					
+						_percent = _percent_clean * _koeff;
+
+						if (typeof(_percent_prev) == "undefined") _percent_prev = _percent;
+						
+				//		console.log("scroll_top_prev:" + scroll_top_prev);
+				//		console.log("scroll_top:" + scroll_top);
+				//		console.log("_percent_prev:" + _percent_prev);
+						
+						if (scroll_top_prev < scroll_top && _percent_prev >  _percent) _percent = _percent_prev;
+						if (scroll_top_prev > scroll_top && _percent_prev <  _percent) _percent = _percent_prev;
+						
+						
+						_percent_prev = _percent;
+						scroll_top_prev = scroll_top;
+					/*
+						if (_percent < 10) _koeff = 2;
+						else if (_percent < 11) _koeff = 1.95;
+						else if (_percent < 12) _koeff = 1.80;
+						else if (_percent < 13) _koeff = 1.75;
+						else if (_percent < 14) _koeff = 1.70;
+						else if (_percent < 15) _koeff = 1.65;
+						else if (_percent < 16) _koeff = 1.60;
+						else if (_percent < 17) _koeff = 1.55;
+						else if (_percent < 18) _koeff = 1.50;
+						else if (_percent < 19) _koeff = 1.45;
+						else if (_percent >= 19) _koeff = 1.40;
+						if (_percent > 44) _koeff = 1.35;
+						if (_percent > 45) _koeff = 1.30;
+						if (_percent > 46) _koeff = 1.25;
+						if (_percent > 47) _koeff = 1.20;
+						if (_percent > 48) _koeff = 1.15;
+						if (_percent > 50) _koeff = 1.05;
+*/
+						
+			//			_percent = 100/_elem_height*(scroll_top - _pos_y);
+						if (_percent < 0) _percent = 0;
+				//		console.log((scroll_top - _pos_y + _window_height/2) + " " + _elem_height);
+						
+						set_SVG_length(_percent);
+					//	
+						
+				/*		console.log("clean_percent:" + _percent_clean);
+						console.log("Round_percent:" + Math.round(_percent_clean));
+						console.log("current_percent:" + _percent);
+						console.log("koeff:" +_koeff);
+						console.log("koeff_to:" + _koeff_to);
+						console.log("chech_koeff:" + _check_koeff);
+						console.log("-----------------------");*/
+					//	set_SVG_length(
+					break;
+					/*
+					case "show_move_up":
+						translate =  'translateY(0px)';
+						$(this).css({
+						'-webit-transform': translate,
+						'-moz-transform': translate,
+						'transform': translate,
+				//		'transition-delay': "0s",
+				//		'transition-duration': "0s"
+						
+						});
+					break;
+					case "show_move_left":
+						translate =  'translateX(0px)';
+						$(this).css({
+						'-webit-transform': translate,
+						'-moz-transform': translate,
+						'transform': translate,
+				//		'transition-delay': "0s",
+				//		'transition-duration': "0s"
+						});
+					break;
+					case "show_move_right":
+						translate =  'translateX(0px)';
+						$(this).css({
+						'-webit-transform': translate,
+						'-moz-transform': translate,
+						'transform': translate,
+				//		'transition-delay': "0s",
+				//		'transition-duration': "0s"
+						});
+					break;
+					*/
+				}
+			}
+			else
+			{
+				$(this).removeClass("on_show");
+				switch (_type)
+				{
+					case "show_move_up":
+			//			$(this).removeClass("animate");
+					break;
+					case "show_move_right":
+			//			$(this).removeClass("animate");
+					break;
+					case "show_move_left":
+			//			$(this).removeClass("animate");
+					break;
+					case "svg_line":
+			//			set_SVG_length(0);
+					break;
+				/*
+					case "show_move_up":
+						translate =  'translateY(1000px)';
+						$(this).css({
+						'-webit-transform': translate,
+						'-moz-transform': translate,
+						'transform': translate,
+						'transition-delay': _delay+"s",
+				//		'transition-duration': _speed+"s"
+						});
+					break;
+					case "show_move_left":
+						translate =  'translateX(1000px)';
+						$(this).css({
+						'-webit-transform': translate,
+						'-moz-transform': translate,
+						'transform': translate,
+						'transition-delay': _delay+"s",
+						'transition-duration': _speed+"s"
+						});
+					break;
+					case "show_move_right":
+						translate =  'translateX(-1000px)';
+						$(this).css({
+						'-webit-transform': translate,
+						'-moz-transform': translate,
+						'transform': translate,
+						'transition-delay': _delay+"s",
+						'transition-duration': _speed+"s"
+						});
+					break;
+					*/
+				}
+			}
+
+		});
+
+		
+		
+		$(".anim").each(function(){
+		
+		
+		
+			_pos = $(this).offset().top;
+			_top = parseInt($(this).css("top"));
+			_window_height = $(window).height();
+			
+			if ($(this).css("position") == "absolute")
+			{
+				_pos = _pos;
+				var _check = _pos - _window_height;
+			}
+			else
+			{			
+				_pos = _pos - _top;
+				var _check = _pos - _window_height;
+			}
+
+			
+			if ($(this).hasClass("bg1_item1"))
+			{
+		//		console.log(_pos);
+		//		console.log(_top);
+		//		console.log($(this).css("position"));
+			}
+		
+			
+			if ((_check) < scroll_top)
+			{
+				$(this).attr("data-top",_pos);
+				$(this).addClass("animated");
+			}
+			else
+			{
+				$(this).removeClass("animated");
+			}
+		});
+	});
+	$(window).trigger("scroll");
+}
+function _check_height()
+{
+	$(".check_height").each(function(){
+		_max_line = $(this).attr("data-rowcount");
+		_line_height = parseFloat($(this).css("line-height"));
+		_real_height = $(this).height();
+		_font_size = parseFloat($(this).css('font-size'));
+		
+	//	console.log(_line_height);
+	//	console.log(_real_height);
+	//	console.log(_font_size);
+		
+		
+		
+		count = 0;
+		while (_real_height > _line_height*_max_line)
+		{
+			_font_size -= 0.1;
+			$(this).css('font-size',_font_size);
+			_real_height = $(this).height();
+			_line_height = parseFloat($(this).css("line-height"));
+			if (count > 1000) return;
+			
+			count++;
+		
+		}
+	});
+}
+
+
+function _init_video()
+{
+	$(".mvideo_container").click(function(){
+		
+		
+		if (!$(this).hasClass("init"))
+		{
+			var _webm = $(this).attr("data-webm");
+			if (_webm != "") _webm = "<source src='"+_webm+"' type='video/webm;'>";
+			
+			$(this).append("<video>"+_webm+"<source src='"+$(this).attr("data-src")+"' type='video/mp4;'></video>");
+			$(this).addClass("init");
+			$(this).addClass("play");
+			
+			$("video",this).get(0).muted = true;
+			$("video",this).attr("autoplay","autoplay");
+			
+		//	$("video",this).get(0).play();
+	//		console.log("init");
+	//		console.log("play");
+		}
+		else
+		{
+			$("video",this).get(0).muted = false;
+
+			if ($(this).hasClass("play"))
+			{
+				$(this).removeClass("play");
+				$("video",this).get(0).pause();
+		//		console.log("pause");
+			}
+			else
+			{
+				$(this).addClass("play");
+				$("video",this).get(0).play();
+	//		console.log("play");
+			}
+		}
+	});
+	
+	
+
+	$(".mvideo_container[autoplay]").click();
+	//setTimeout(function(){$(".mvideo_container[autoplay]").click();},3000);
+
+
+
+	
+	$(document).on("click",".video_container .poster",function(){
+		_parent = $(this).closest(".video_container");
+		youtubeId = $(this).attr("href").split("#");
+		youtubeId = youtubeId[1];
+		
+		superplayerId = "youtube"+Math.floor(Math.random() * 100000);
+		$(this).attr("id",superplayerId);
+		
+		loadScript( "https://www.youtube.com/iframe_api", function(){
+			YT.ready( function(){
+				onYouTubeIframeAPIReady();
+			});
+		});
+		return false;
+	});
+}
+function onYouTubeIframeAPIReady()
+{
+	player = new YT.Player( superplayerId, {
+
+	  width: '100%',
+	  height: '100%',
+
+	  videoId: youtubeId,
+	  playerVars :{ 'rel': 0, 'showinfo': 0 },
+	  events: {
+		'onReady': onPlayerReady,
+	//	'onStateChange': onPlayerStateChange
+	  }
+	});
+}
+
+function onPlayerReady(event) {
+	event.target.playVideo();
+}
+
+
+$(function()
+{
+	$(document).on("change","input[name='agree']",function(){
+		var _form = $(this).closest('form');
+		if ($("input[name='agree']:not(:checked)",_form).length == 0)
+			$(_form).removeClass("not_agree");
+		else
+			$(_form).addClass("not_agree");
+		
+	});
+	$(document).on( "click","form.not_agree input[type='submit'],form.not_agree button[type='submit'],form.not_agree a.submit",function(){
+		var _form = $(this).closest('form');
+		if ($(_form).hasClass('not_agree')) return false;
+	});
+
+	$(document).on( "submit","form",function(){
+		if ($(this).hasClass('not_agree')) return false;
+	});
+
+
+	$('#top_menu .current a').each(function(){
+		$(this).attr('href','#');
+	});
+	anchor_click();
+	init_resp_table();
+	initFancybox();
+	init_topmenu();
+	init_back();
+	init_top_menu();
+	_init_m_short();
+	init_blocks();
+	_init_video();
+	
+	$('.m_combo').m_combo();
+	$('.m_multi_combo').m_multi_combo();
+
+	$('.mgallery').mgallery();
+
+	
+	$(document).mousedown(function(event){if ($(event.target).parents('.m_combo').length == 0 && !$(event.target).hasClass('m_combo')) $('.m_combo').removeClass('open');});
+	
+	
+	$(document).mousedown(function(event){if ($(event.target).parents('.m_combo_container').length == 0 && !$(event.target).hasClass('m_combo_container')) $('.m_combo_container').removeClass('open');});
+
+	
+	//_show_FontAwesome();
+	
+	
+	//$('.counter').counterUp({delay: 10,time: 1000});
+	
+} );
+
+
+$(window).bind('load resize', function() {
+});
+
+$(window).on("load",function(){
+	$(".preloader").fadeOut("slow");
+	_init_scroll();
+	$(".block_banner .slick-active .text").addClass("animate");
+	_check_height();
+});
+
+
+
+
+
